@@ -8,7 +8,7 @@ Sagnik Majumder, Tushar Nagarajan, Ziad Al-Halah, Reina Pradhan, Kristen Grauman
 Project website: [https://vision.cs.utexas.edu/projects/lang-view](https://vision.cs.utexas.edu/projects/lang-view/)
 
 <p align="center">
-  <img src="concept.png" width="500" height="350">
+  <img src="concept.png" width="1124" height="350">
 </p>
 
 ## Abstract
