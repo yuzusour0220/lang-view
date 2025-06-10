@@ -1,7 +1,8 @@
 # [CVPR 25 Highlight] Which Viewpoint Shows it Best? Language for Weakly Supervising View Selection in Multi-view Instructional Videos
 This repository will very soon contain the PyTorch code for our **CVPR 2025 paper** and the associated datasets: 
 
-[Which Viewpoint Shows it Best? Language for Weakly Supervising View Selection in Multi-view Instructional Videos]([https://vision.cs.utexas.edu/projects/ego_av_corr/](https://vision.cs.utexas.edu/projects/lang-view/))<br />
+<!--[Which Viewpoint Shows it Best? Language for Weakly Supervising View Selection in Multi-view Instructional Videos](https://vision.cs.utexas.edu/projects/lang-view)<br />-->
+*Which Viewpoint Shows it Best? Language for Weakly Supervising View Selection in Multi-view Instructional Videos*<br/>
 [Sagnik Majumder](https://sagnikmjr.github.io/), [Tushar Nagarajan](https://tushar-n.github.io/), [Ziad Al-Halah](https://users.cs.utah.edu/~ziad/), [Reina Pradhan](https://www.linkedin.com/in/reina-pradhan), [Kristen Grauman](https://www.cs.utexas.edu/~grauman)<br />
 
 
