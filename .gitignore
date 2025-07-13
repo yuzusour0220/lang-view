@@ -1,0 +1,7 @@
+__pycache__
+data
+runs
+runs_lemma
+core.*
+slurm
+*.pth

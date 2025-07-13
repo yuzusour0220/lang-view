@@ -17,17 +17,24 @@ Given a multi-view video, which viewpoint is most informative for a human observ
 
 
 ## Code and Datasets
-Coming soon!!
+### TODOs: will complete by 7/19 
 
+- ~~Add code~~ ✅ 
+- Env setup instructions
+- Checkpoint release
+- Data release
+- Auto-metric eval scripts
 
 
 ## Citation
 ```
-@article{majumder2024viewpoint,
-  title={Which Viewpoint Shows it Best? Language for Weakly Supervising View Selection in Multi-view Videos},
-  author={Majumder, Sagnik and Nagarajan, Tushar and Al-Halah, Ziad and Pradhan, Reina and Grauman, Kristen},
-  journal={arXiv preprint arXiv:2411.08753},
-  year={2024}
+@InProceedings{Majumder_2025_CVPR,
+    author    = {Majumder, Sagnik and Nagarajan, Tushar and Al-Halah, Ziad and Pradhan, Reina and Grauman, Kristen},
+    title     = {Which Viewpoint Shows it Best? Language for Weakly Supervising View Selection in Multi-view Instructional Videos},
+    booktitle = {Proceedings of the Computer Vision and Pattern Recognition Conference (CVPR)},
+    month     = {June},
+    year      = {2025},
+    pages     = {29016-29028}
 }
 ```
 
