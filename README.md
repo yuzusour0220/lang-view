@@ -17,7 +17,7 @@ Given a multi-view video, which viewpoint is most informative for a human observ
 
 
 ## Code and Datasets
-### TODOs: will complete by 7/19 
+### TODOs: will complete by 7/26
 
 - ~~Add code~~ ✅ 
 - Env setup instructions
