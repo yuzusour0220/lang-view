@@ -17,13 +17,19 @@ Given a multi-view video, which viewpoint is most informative for a human observ
 
 
 ## Code and Datasets
-### TODOs: will complete by 7/26
+### TODOs: hope to complete all by 8/3
 
-- ~~Add code~~ ✅ 
+- ~~Code~~ ✅ 
 - Env setup instructions
+- Train and test bash commands
 - Checkpoint release
 - Data release
-- Auto-metric eval scripts
+- ~~Auto-metric eval scripts~~ ✅ 
+- ```train.py```, ```test.py``` for LEMMA
+- Auto-metric eval scripts for LEMMA
+- Train and test bash commands for LEMMA
+- Checkpoint release for LEMMA
+- Data release for LEMMA
 
 
 ## Citation
