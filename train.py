@@ -53,7 +53,7 @@ def main():
 	parser.add_argument("--randomize-trainViewOrder", action="store_true")
 
 	parser.add_argument("--all-views", type=list_of_strs__or__str, default='aria,1,2,3,4', help="List of all views")
-	parser.add_argument("--num-frames", type=int, default=4, help="Number of frames (default: 4)")
+	parser.add_argument("--num-frames", type=int, default=8, help="Number of frames (default: 8)")
 	parser.add_argument("--frame-height", type=int, default=224, help="Frame height (default: 224)")
 	parser.add_argument("--frame-width", type=int, default=224, help="Frame width (default: 224)")
 	parser.add_argument("--dont-square-frames", action="store_true")
@@ -65,10 +65,10 @@ def main():
 
 	parser.add_argument('--recog-arc', type=str, default="egovlp_v2", help="Recognition architecture from ['egovlp_v2',]")
 	parser.add_argument("--vidEncoder-ckptPath", type=none_or_str, 
-						default="checkpoints/egovlpV2_model_best_egoExo30nov2024.pth",
+						default="pretrained_checkpoints/egovlpV2_model_best_egoExo30nov2024.pth",
 						help="Path to pretrained video encoder checkpoint")
 	parser.add_argument("--use-egovlpV2-patchLevelVisualFeats", action="store_true")
-	parser.add_argument("--egovlpV2-patchLevelVisualFeats-convOutDims", type=int, default=192)
+	parser.add_argument("--egovlpV2-patchLevelVisualFeats-convOutDims", type=int, default=384)
 	parser.add_argument("--egovlpV2-depth", type=int, default=12,)
 	parser.add_argument("--egovlpV2-feedFourFrames", action="store_true")
 
@@ -105,16 +105,16 @@ def main():
 	parser.add_argument("--relativeCameraPoseLoss-rotationInAngles", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-rotationInQuarts", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-rotationAsClasses", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-rotationClassSize", type=float, default=10)
+	parser.add_argument("--relativeCameraPoseLoss-rotationClassSize", type=float, default=30)
 	parser.add_argument("--relativeCameraPoseLoss-coordsNormalized", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-coordsInAngles", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-coordsAsClasses", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-coordsClassSize", type=float, default=10)
+	parser.add_argument("--relativeCameraPoseLoss-coordsClassSize", type=float, default=30)
 	parser.add_argument("--relativeCameraPoseLoss-convOutDims", type=int, default=64)
-	parser.add_argument("--relativeCameraPoseLoss-refType", type=str, default="first_view",
+	parser.add_argument("--relativeCameraPoseLoss-refType", type=str, default="all_views",
 						help="from ['first_view' | 'all_views' | 'ego_view']")
 	parser.add_argument("--relativeCameraPoseLoss-stopGradientRefPose", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-weight", type=float, default=1.0)
+	parser.add_argument("--relativeCameraPoseLoss-weight", type=float, default=0.5)
 	parser.add_argument("--relativeCameraPoseLoss-frameType", type=str, default="all",
 						help="from ['all' | 'center']")
 	parser.add_argument("--cameraPose-dir", type=str,
@@ -122,7 +122,7 @@ def main():
 	parser.add_argument("--relativeCameraPoseLoss-lossType", type=str, default="l2",
 						help="options from ['l1' | 'l2']")
 
-	parser.add_argument("--weight-decay", type=float, default=1e-5, help="Weight decay")
+	parser.add_argument("--weight-decay", type=float, default=1e-3, help="Weight decay")
 	parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
 	parser.add_argument("--lr-videoEncoder", type=float, default=1e-5, help="Learning rate")
 

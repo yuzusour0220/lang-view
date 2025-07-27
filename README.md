@@ -20,16 +20,41 @@ Given a multi-view video, which viewpoint is most informative for a human observ
 ### TODOs: hope to complete all by 8/3
 
 - ~~Code~~ ✅ 
-- Env setup instructions
-- Train and test bash commands
-- Checkpoint release
-- Data release
+- ~~Env setup instructions~~  ✅ 
+- ~~Train and test bash commands for Ego-Exo4D~~ ✅ 
+- ~~Checkpoint release  for Ego-Exo4D~~ ✅ 
+- Data release  for Ego-Exo4D
 - ~~Auto-metric eval scripts~~ ✅ 
 - ```train.py```, ```test.py``` for LEMMA
 - Auto-metric eval scripts for LEMMA
 - Train and test bash commands for LEMMA
 - Checkpoint release for LEMMA
 - Data release for LEMMA
+
+## Dependencies
+This code has been tested with ```python 3.9.18``` with ```torch 2.2.2+cu121``` and ```torchvision 0.17.2+cu121```. Additional python package requirements are available in ```requirements.txt```.   
+  
+Install the remaining dependencies either by 
+```
+pip3 install -r requirements.txt
+``` 
+or by parsing ```requirements.txt``` to get the names and versions of individual dependencies and install them individually.
+
+## Run commands, tested with 8 V100s
+Download the EgoVLPv2 pretrained checkpoint from [this link](https://utexas.box.com/shared/static/0ma3omfj7eb94kqvg0kg8qe5mxdnasxr.zip) and put it at this path: ```pretrained_checkpoints/egovlpV2_model_best_egoExo30nov2024.pth```.
+
+###### Ego-Exo4D training
+```
+python3 train.py --run-dir runs/egoExo4d_release --log-tb --data-parallel --use-datapointVideoClips --randomize-trainViewOrder --unfreeze-videoEncoder --use-minMultiHotLoss --trainDatapoints-filePath data/labels/train/videoLlama_cider_all3Agree.pkl,data/labels/train/videoLlamaWvicuna_cider_all3Agree.pkl,data/labels/train/videoChat2_cider_all3Agree.pkl --valDatapoints-filePath data/labels/val/videoLlama_cider_all3Agree.pkl,data/labels/val/videoLlamaWvicuna_cider_all3Agree.pkl,data/labels/val/videoChat2_cider_all3Agree.pkl --multiBestViewAggregator-multiPseudoLabler --use-relativeCameraPoseLoss --maskOut-invalidRelativeCameraPoseLoss-inTraining --relativeCameraPoseLoss-rotationInAngles --relativeCameraPoseLoss-rotationAsClasses --relativeCameraPoseLoss-coordsInAngles --relativeCameraPoseLoss-coordsAsClasses 
+```
+###### Ego-Exo4D testing
+Download the Ego-Exo4D checkpoint from [this link](https://utexas.box.com/shared/static/x56paq0un6f2y8xkcorhbl5jkndajhiv.zip) and put it at this path: ```runs/egoExo4d_release/data/valBestCkpt_maxCaptioningScore.pth```
+
+```
+python3 test.py --run-dir runs/egoExo4d_release --data-parallel --use-datapointVideoClips --unfreeze-videoEncoder --use-relativeCameraPoseLoss --relativeCameraPoseLoss-rotationInAngles --relativeCameraPoseLoss-rotationAsClasses --relativeCameraPoseLoss-coordsInAngles --relativeCameraPoseLoss-coordsAsClasses
+```
+
+To compute auto-metrics, run the following scripts: ```scripts/ego_exo4d/format_predictedVIewScores.ipynb```, ```scripts/ego_exo4d/run_captioningMetrics.py``` and ```scripts/ego_exo4d/compute_captioningScores.ipynb``` one after the other. 
 
 
 ## Citation

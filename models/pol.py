@@ -5,8 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from einops import rearrange
-
 from models.video_transformer_egovlp import EgoVLPv2
 from common.utils import *
 

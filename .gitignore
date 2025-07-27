@@ -5,3 +5,4 @@ runs_lemma
 core.*
 slurm
 *.pth
+*.tar.gz

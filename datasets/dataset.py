@@ -528,7 +528,7 @@ class train_dataset(object):
 			self.class_weights = np.array([0, 0, 0, 0])
 
 	def __len__(self):
-		return 24	# 2, 6, 24, self.total_num_samples
+		return self.total_num_samples	# 2, 6, 24, self.total_num_samples
 
 	def __getitem__(self, index):
 		dtpnt_idx = torch.randint(len(self.lst_dtpnts), (1,)).item()
@@ -973,7 +973,9 @@ class train_dataset(object):
 
 class val_dataset(object):
 	def __init__(self, args, **kwargs):
-		self.lemmaDataset_dct = pkl_ld("./data/lemma/v1/misc/take__2__startNendEgoImageSuffix__2__timestamp_n_startNendClipName_n_startNendFrameIdx_n_listAtomicDescriptions_n_listImageSuffixes__val.pkl")
+		self.lemmaDataset_dct =\
+			pkl_ld("./data/lemma/v1/misc/"+\
+				  "take__2__startNendEgoImageSuffix__2__timestamp_n_startNendClipName_n_startNendFrameIdx_n_listAtomicDescriptions_n_listImageSuffixes__val.pkl")
 
 		self.args = args
 		self.kwargs = kwargs
@@ -1210,7 +1212,7 @@ class val_dataset(object):
 			self.class_weights = np.array([0, 0, 0, 0])
 
 	def __len__(self):
-		return 24	# 2, 6, 24, self.total_num_samples
+		return self.total_num_samples	# 2, 6, 24, self.total_num_samples
 
 	def __getitem__(self, index):
 		dtpnt_idx = index
@@ -1601,8 +1603,9 @@ class val_dataset(object):
 
 class test_dataset(object):
 	def __init__(self, args, **kwargs):
-		self.lemmaDataset_dct = pkl_ld("data/lemma/v1/misc/take__2__startNendEgoImageSuffix__2__timestamp_n_startNendClipName_n_startNendFrameIdx_n_listAtomicDescriptions_n_listImageSuffixes__val.pkl")
-
+		self.lemmaDataset_dct =\
+			pkl_ld("data/lemma/v1/misc/"+\
+				   "take__2__startNendEgoImageSuffix__2__timestamp_n_startNendClipName_n_startNendFrameIdx_n_listAtomicDescriptions_n_listImageSuffixes__val.pkl")
 
 		self.args = args
 		self.kwargs = kwargs

@@ -9,9 +9,6 @@ import numpy as np
 from tqdm import tqdm
 
 import cv2 as cv
-from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
-import matplotlib
-import matplotlib.pyplot as plt
 
 import torch
 import torch.distributed as dist
@@ -20,10 +17,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-
-cmap = matplotlib.cm.get_cmap('viridis') # "Reds", "viridis"
-cmap.set_bad(color="k", alpha=0.0)
 
 
 def train_n_val(train_loader,
