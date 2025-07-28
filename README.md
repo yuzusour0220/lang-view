@@ -23,12 +23,12 @@ Given a multi-view video, which viewpoint is most informative for a human observ
 - ~~Env setup instructions~~  ✅ 
 - ~~Train and test bash commands for Ego-Exo4D~~ ✅ 
 - ~~Checkpoint release  for Ego-Exo4D~~ ✅ 
-- Data release  for Ego-Exo4D
+- Data release for Ego-Exo4D
 - ~~Auto-metric eval scripts~~ ✅ 
-- ```train.py```, ```test.py``` for LEMMA
+- ~~```train.py```, ```test.py``` for LEMMA~~✅
 - Auto-metric eval scripts for LEMMA
-- Train and test bash commands for LEMMA
-- Checkpoint release for LEMMA
+- ~~Train and test bash commands for LEMMA~~✅
+- ~~Checkpoint release for LEMMA~~✅
 - Data release for LEMMA
 
 ## Dependencies
@@ -40,21 +40,46 @@ pip3 install -r requirements.txt
 ``` 
 or by parsing ```requirements.txt``` to get the names and versions of individual dependencies and install them individually.
 
+## Data
+Data link and extraction instructions COMING SOON!
+
+<!-- Download the data segments from [this link](https://utexas.box.com/shared/static/), copy them to the repo root and run the following commands: 
+```
+cat data_part_* > data.tar
+tar -xvf data.tar ./
+```
+
+For LEMMA frames, download the data from the [dataset website](https://sites.google.com/view/lemma-activity/home/dataset?authuser=0) and point ```data/lemma/datapoint_images``` to the ```data-002``` directory in the downloaded data directory. -->
+
+
 ## Run commands, tested with 8 V100s
 Download the EgoVLPv2 pretrained checkpoint from [this link](https://utexas.box.com/shared/static/0ma3omfj7eb94kqvg0kg8qe5mxdnasxr.zip) and put it at this path: ```pretrained_checkpoints/egovlpV2_model_best_egoExo30nov2024.pth```.
+
+Download the Lang-View checkpoint directory from [this link](https://utexas.box.com/shared/static/u29w5455dupm5rexbuworwxzxduitof6.zip) and put it at this path: ```runs```
 
 ###### Ego-Exo4D training
 ```
 python3 train.py --run-dir runs/egoExo4d_release --log-tb --data-parallel --use-datapointVideoClips --randomize-trainViewOrder --unfreeze-videoEncoder --use-minMultiHotLoss --trainDatapoints-filePath data/labels/train/videoLlama_cider_all3Agree.pkl,data/labels/train/videoLlamaWvicuna_cider_all3Agree.pkl,data/labels/train/videoChat2_cider_all3Agree.pkl --valDatapoints-filePath data/labels/val/videoLlama_cider_all3Agree.pkl,data/labels/val/videoLlamaWvicuna_cider_all3Agree.pkl,data/labels/val/videoChat2_cider_all3Agree.pkl --multiBestViewAggregator-multiPseudoLabler --use-relativeCameraPoseLoss --maskOut-invalidRelativeCameraPoseLoss-inTraining --relativeCameraPoseLoss-rotationInAngles --relativeCameraPoseLoss-rotationAsClasses --relativeCameraPoseLoss-coordsInAngles --relativeCameraPoseLoss-coordsAsClasses 
 ```
+
 ###### Ego-Exo4D testing
-Download the Ego-Exo4D checkpoint from [this link](https://utexas.box.com/shared/static/x56paq0un6f2y8xkcorhbl5jkndajhiv.zip) and put it at this path: ```runs/egoExo4d_release/data/valBestCkpt_maxCaptioningScore.pth```
+<!-- Download the Ego-Exo4D checkpoint from [this link](https://utexas.box.com/shared/static/x56paq0un6f2y8xkcorhbl5jkndajhiv.zip) and put it at this path: ```runs/egoExo4d_release/data/valBestCkpt_maxCaptioningScore.pth``` -->
 
 ```
 python3 test.py --run-dir runs/egoExo4d_release --data-parallel --use-datapointVideoClips --unfreeze-videoEncoder --use-relativeCameraPoseLoss --relativeCameraPoseLoss-rotationInAngles --relativeCameraPoseLoss-rotationAsClasses --relativeCameraPoseLoss-coordsInAngles --relativeCameraPoseLoss-coordsAsClasses
 ```
 
 To compute auto-metrics, run the following scripts: ```scripts/ego_exo4d/format_predictedVIewScores.ipynb```, ```scripts/ego_exo4d/run_captioningMetrics.py``` and ```scripts/ego_exo4d/compute_captioningScores.ipynb``` one after the other. 
+
+###### LEMMA training
+```
+python3 train_lemma.py --run-dir runs/lemma_release --data-parallel --isLemma-dataset --use-datapointVideoClips --randomize-trainViewOrder --unfreeze-videoEncoder --use-minMultiHotLoss --trainDatapoints-filePath data/lemma/labels/train/videoLlama_cider_all3Agree.pkl,data/lemma/labels/train/videoLlamaWvicuna_cider_all3Agree.pkl,data/lemma/labels/train/videoChat2_cider_all3Agree.pkl --valDatapoints-filePath data/lemma/labels/val/videoLlama_cider_all3Agree.pkl,data/lemma/labels/val/videoLlamaWvicuna_cider_all3Agree.pkl,data/lemma/labels/val/videoChat2_cider_all3Agree.pkl --multiBestViewAggregator-multiPseudoLabler --use-egovlpV2-patchLevelVisualFeats
+```
+###### LEMMA testing
+```
+python3 test_lemma.py --isLemma-dataset --data-parallel --run-dir runs/lemma_release --use-datapointVideoClips --unfreeze-videoEncoder --use-egovlpV2-patchLevelVisualFeats
+```
+Auto-metric computation scripts COMING SOON!
 
 
 ## Citation

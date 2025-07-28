@@ -1640,7 +1640,7 @@ class test_dataset(object):
 			    frame_normalize_,
 			])
 
-		assert os.path.isfile(datapoints_filePath)
+		assert os.path.isfile(datapoints_filePath), print(datapoints_filePath)
 		with open(datapoints_filePath, "rb") as fi:
 			self.tkNm_2_strtNendTmstmp_2_tmstmpNstrtNendClpnmNstrtNendFrmIdxNscrs = pickle.load(fi)
 		self.lst_dtpnts = []

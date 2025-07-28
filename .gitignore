@@ -6,3 +6,4 @@ core.*
 slurm
 *.pth
 *.tar.gz
+data_part_*

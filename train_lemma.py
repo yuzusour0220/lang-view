@@ -17,7 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 def main():
 	warnings.filterwarnings("ignore")
 
-	parser = argparse.ArgumentParser(description = "Lang-View training on Ego-Exo4D")
+	parser = argparse.ArgumentParser(description = "Lang-View training on LEMMA")
 
 	parser.add_argument("--seed", dest="seed", type=int, default=0, help="Random seed value")
 	parser.add_argument("--run-dir", type=str, default="runs/DIRNAME", help="Run directory")
@@ -34,17 +34,24 @@ def main():
 
 	parser.add_argument("--optimizer-type", type=str, default="adam_w", help="from ['adam' | 'adam_w'] (default: 'adam_w')")
 
+	parser.add_argument("--isLemma-dataset", action="store_true")
 	parser.add_argument("--trainDatapoints-filePath", type=list_of_strs__or__str,
-						default="data/ego_exo4d/labels/train/videoLlama_cider_all3Agree.pkl",
+						default="data/lemma/labels/train/videoLlama_cider_all3Agree.pkl",
 						help="Path to file with train datapoints")
-	parser.add_argument("--valDatapoints-filePath", type=list_of_strs__or__str,	
-						default="data/ego_exo4d/labels/val/videoLlama_cider_all3Agree.pkl",	
+	parser.add_argument("--valDatapoints-filePath", type=list_of_strs__or__str,
+						default="data/lemma/labels/val/videoLlama_cider_all3Agree.pkl",
 						help="Path to file with val datapoints")
 	parser.add_argument("--multiBestViewAggregator-multiPseudoLabler", action="store_true")
 
+	parser.add_argument("--trainDatapoints-captioner-filePath", type=list_of_strs__or__str,
+						default="data/labels/train/videoLlama_cider.pkl")
+	parser.add_argument("--valDatapoints-captioner-filePath", type=list_of_strs__or__str,
+						default="data/labels/val/videoLlama_cider.pkl")
+
 	parser.add_argument('--datapoint-videoClips-dir', type=str, 
-						default='data/ego_exo4d/clips', 
-						help='Datapoint video clips dir')
+						default='data/lemma/datapoint_images', 
+						help='Datapoint video clips dir. Data needs to be downloaded from the original dataset website and '+\
+							 'extracted, and "data/lemma/datapoint_images" needs to point to "data-002" sub-directory')
 	parser.add_argument("--use-datapointVideoClips", action="store_true")
 
 	parser.add_argument("--task-type", type=str, default='classify_oneHot', help="Task type from ['classify_oneHot', 'match_dist',]")
@@ -52,13 +59,13 @@ def main():
 						help="Randomize training label for one-hot best view pred")
 	parser.add_argument("--randomize-trainViewOrder", action="store_true")
 
-	parser.add_argument("--all-views", type=list_of_strs__or__str, default='aria,1,2,3,4', help="List of all views")
+	parser.add_argument("--all-views", type=list_of_strs__or__str, default='fpv1,master', help="List of all views")
 	parser.add_argument("--num-frames", type=int, default=8, help="Number of frames (default: 8)")
 	parser.add_argument("--frame-height", type=int, default=224, help="Frame height (default: 224)")
 	parser.add_argument("--frame-width", type=int, default=224, help="Frame width (default: 224)")
 	parser.add_argument("--dont-square-frames", action="store_true")
-	parser.add_argument("--frame-horizontalFlip", action="store_true",)
-	parser.add_argument("--frame-colorJitter", type=list_of_floats, default="0.0,0.0,0.0")
+	parser.add_argument("--frame-horizontalFlip", action="store_true",)	# default=[1024, 128]
+	parser.add_argument("--frame-colorJitter", type=list_of_floats, default="0.0,0.0,0.0")	# default=[1024, 128]
 
 	parser.add_argument('--unfreeze-videoEncoder', action="store_true")
 	parser.add_argument("--videoEncoder-dropout", type=float, default=0.)
@@ -111,10 +118,10 @@ def main():
 	parser.add_argument("--relativeCameraPoseLoss-coordsAsClasses", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-coordsClassSize", type=float, default=30)
 	parser.add_argument("--relativeCameraPoseLoss-convOutDims", type=int, default=64)
-	parser.add_argument("--relativeCameraPoseLoss-refType", type=str, default="all_views",
+	parser.add_argument("--relativeCameraPoseLoss-refType", type=str, default="first_view",
 						help="from ['first_view' | 'all_views' | 'ego_view']")
 	parser.add_argument("--relativeCameraPoseLoss-stopGradientRefPose", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-weight", type=float, default=0.5)
+	parser.add_argument("--relativeCameraPoseLoss-weight", type=float, default=1.0)
 	parser.add_argument("--relativeCameraPoseLoss-frameType", type=str, default="all",
 						help="from ['all' | 'center']")
 	parser.add_argument("--cameraPose-dir", type=str,

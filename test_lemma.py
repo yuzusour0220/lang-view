@@ -14,7 +14,7 @@ import torch
 def main():
 	warnings.filterwarnings("ignore")
 
-	parser = argparse.ArgumentParser(description = "Lang-View testing on Ego-Exo4D")
+	parser = argparse.ArgumentParser(description = "Lang-View testing on LEMMA")
 
 	parser.add_argument("--seed", dest="seed", type=int, default=0, help="Random seed value")
 	parser.add_argument("--run-dir", type=str, default="runs/DIRNAME", help="Run directory")
@@ -24,18 +24,19 @@ def main():
 	parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
 	parser.add_argument("--num-workers", type=int, default=4, help="Number of workers")
 
+	parser.add_argument("--isLemma-dataset", action="store_true")
 	parser.add_argument("--testDatapoints-filePath", type=str, 
-						default="data/ego_exo4d/labels/test.pkl",	
+						default="data/lemma/labels/test.pkl",
 						help="Path to file with train datapoints")
-
+	
 	parser.add_argument('--datapoint-videoClips-dir', type=str, 
-						default='data/ego_exo4d/clips', 
+						default='data/lemma/datapoint_images', 
 						help='Datapoint video clips dir')
 	parser.add_argument("--use-datapointVideoClips", action="store_true")
 
 	parser.add_argument("--task-type", type=str, default='classify_oneHot', help="Task type from ['classify_oneHot', 'match_dist',]")
 
-	parser.add_argument("--all-views", type=list_of_strs__or__str, default='aria,1,2,3,4', help="List of all views")
+	parser.add_argument("--all-views", type=list_of_strs__or__str, default='fpv1,master', help="List of all views")
 	parser.add_argument("--num-frames", type=int, default=8, help="Number of frames (default: 8)")
 	parser.add_argument("--frame-height", type=int, default=224, help="Frame height (default: 224)")
 	parser.add_argument("--frame-width", type=int, default=224, help="Frame width (default: 224)")
@@ -49,7 +50,7 @@ def main():
 						default="pretrained_checkpoints/egovlpV2_model_best_egoExo30nov2024.pth",
 						help="Path to pretrained video encoder checkpoint")
 	parser.add_argument("--use-egovlpV2-patchLevelVisualFeats", action="store_true")
-	parser.add_argument("--egovlpV2-patchLevelVisualFeats-convOutDims", type=int, default=384)
+	parser.add_argument("--egovlpV2-patchLevelVisualFeats-convOutDims", type=int, default=192)
 	parser.add_argument("--egovlpV2-depth", type=int, default=12,)
 	parser.add_argument("--egovlpV2-feedFourFrames", action="store_true")
 
@@ -78,11 +79,11 @@ def main():
 	parser.add_argument("--relativeCameraPoseLoss-rotationInAngles", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-rotationInQuarts", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-rotationAsClasses", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-rotationClassSize", type=float, default=30)
+	parser.add_argument("--relativeCameraPoseLoss-rotationClassSize", type=float, default=10)
 	parser.add_argument("--relativeCameraPoseLoss-coordsInAngles", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-coordsNormalized", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-coordsAsClasses", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-coordsClassSize", type=float, default=30)
+	parser.add_argument("--relativeCameraPoseLoss-coordsClassSize", type=float, default=10)
 	parser.add_argument("--relativeCameraPoseLoss-convOutDims", type=int, default=64)
 
 	parser.add_argument("--distributed", action="store_true", help="Run distributed")
