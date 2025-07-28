@@ -23,13 +23,13 @@ Given a multi-view video, which viewpoint is most informative for a human observ
 - ~~Env setup instructions~~  ✅ 
 - ~~Train and test bash commands for Ego-Exo4D~~ ✅ 
 - ~~Checkpoint release  for Ego-Exo4D~~ ✅ 
-- Data release for Ego-Exo4D
+- ~~Data release for Ego-Exo4D~~ ✅
 - ~~Auto-metric eval scripts~~ ✅ 
 - ~~```train.py```, ```test.py``` for LEMMA~~✅
 - Auto-metric eval scripts for LEMMA
 - ~~Train and test bash commands for LEMMA~~✅
 - ~~Checkpoint release for LEMMA~~✅
-- Data release for LEMMA
+- ~~Data release for LEMMA~~ ✅
 
 ## Dependencies
 This code has been tested with ```python 3.9.18``` with ```torch 2.2.2+cu121``` and ```torchvision 0.17.2+cu121```. Additional python package requirements are available in ```requirements.txt```.   
@@ -41,15 +41,15 @@ pip3 install -r requirements.txt
 or by parsing ```requirements.txt``` to get the names and versions of individual dependencies and install them individually.
 
 ## Data
-Data link and extraction instructions COMING SOON!
+<!-- Data link and extraction instructions COMING SOON! -->
 
-<!-- Download the data segments from [this link](https://utexas.box.com/shared/static/), copy them to the repo root and run the following commands: 
+Download the data segments from [this link](https://utexas.box.com/shared/static/), copy them to the repo root and run the following commands: 
 ```
 cat data_part_* > data.tar
-tar -xvf data.tar ./
+tar -xvf data.tar
 ```
 
-For LEMMA frames, download the data from the [dataset website](https://sites.google.com/view/lemma-activity/home/dataset?authuser=0) and point ```data/lemma/datapoint_images``` to the ```data-002``` directory in the downloaded data directory. -->
+For LEMMA frames, download the data from the [dataset website](https://sites.google.com/view/lemma-activity/home/dataset?authuser=0) and link ```data/lemma/datapoint_images``` to the ```data-002``` directory in the downloaded data directory.
 
 
 ## Run commands, tested with 8 V100s
