@@ -43,7 +43,7 @@ or by parsing ```requirements.txt``` to get the names and versions of individual
 ## Data
 <!-- Data link and extraction instructions COMING SOON! -->
 
-Download the data segments from [this link](https://utexas.box.com/shared/static/), copy them to the repo root and run the following commands: 
+Download the data segments from [this link](https://utexas.box.com/s/mrp2w8qq8kxqpzlwlghnxj1d2i5bvnt3), copy them to the repo root and run the following commands: 
 ```
 cat data_part_* > data.tar
 tar -xvf data.tar
