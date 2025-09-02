@@ -7,3 +7,4 @@ slurm
 *.pth
 *.tar.gz
 data_part_*
+data.tar
