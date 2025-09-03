@@ -20,8 +20,8 @@ def main():
 	parser.add_argument("--run-dir", type=str, default="runs/DIRNAME", help="Run directory")
 	parser.add_argument("--checkpoint-fileName", type=str, default="valBestCkpt_maxCaptioningScore")
 	parser.add_argument("--data-parallel", action="store_true", help="Test w/ DataParallel")
-
-	parser.add_argument('--batch-size', type=int, default=64, help='Batch size')
+	# 本当のデフォルトは64
+	parser.add_argument('--batch-size', type=int, default=16, help='Batch size')
 	parser.add_argument("--num-workers", type=int, default=4, help="Number of workers")
 
 	parser.add_argument("--testDatapoints-filePath", type=str, 
