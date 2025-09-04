@@ -105,8 +105,8 @@ def main():
 
 	assert os.path.isdir(args.run_dir)
 
-	test(test_loader,
-		**vars(args))
+	x = test(test_loader, **vars(args))
+	# print(x)
 
 
 if __name__ == '__main__':

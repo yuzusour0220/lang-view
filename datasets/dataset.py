@@ -270,7 +270,8 @@ def compute_classWeights(num_views,
 
 class train_dataset(object):
 	def __init__(self, args, **kwargs):
-		self.lemmaDataset_dct = pkl_ld("/vision/sagnik/RA/av_bvs/AV-bestView-selection-in-multiView-videos/data/lemma/v1/misc/take__2__startNendEgoImageSuffix__2__timestamp_n_startNendClipName_n_startNendFrameIdx_n_listAtomicDescriptions_n_listImageSuffixes__train.pkl")
+		self.lemmaDataset_dct = pkl_ld("./data/lemma/v1/misc/"+\
+                   "take__2__startNendEgoImageSuffix__2__timestamp_n_startNendClipName_n_startNendFrameIdx_n_listAtomicDescriptions_n_listImageSuffixes__train.pkl")
 
 		self.args = args
 		self.kwargs = kwargs
