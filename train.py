@@ -61,7 +61,7 @@ def main():
 	parser.add_argument("--frame-colorJitter", type=list_of_floats, default="0.0,0.0,0.0")
 
 	parser.add_argument('--unfreeze-videoEncoder', action="store_true")
-	parser.add_argument("--videoEncoder-dropout", type=float, default=0.)
+	parser.add_argument("--videoEncoder-dropout", type=float, default=0.1)
 
 	parser.add_argument('--recog-arc', type=str, default="egovlp_v2", help="Recognition architecture from ['egovlp_v2',]")
 	parser.add_argument("--vidEncoder-ckptPath", type=none_or_str, 
@@ -85,10 +85,10 @@ def main():
 
 	parser.add_argument("--use-transformerPol", action="store_true")
 	parser.add_argument("--numLayers-transformerPol", type=int, default=2)
-	parser.add_argument("--transformerPol-dropout", type=float, default=0.)
+	parser.add_argument("--transformerPol-dropout", type=float, default=0.1)
 	parser.add_argument("--addPE-transformerPol", action="store_true")
 	parser.add_argument("--linearLayer-dims", type=list_of_ints, default="1024,128")	# default=[1024, 128]
-	parser.add_argument("--linearLayer-dropout", type=float, default=0.)
+	parser.add_argument("--linearLayer-dropout", type=float, default=0.1)
 
 	parser.add_argument("--use-minMultiHotLoss", action="store_true")
 	parser.add_argument("--use-randMultiHotLoss", action="store_true")
@@ -99,7 +99,7 @@ def main():
 
 	parser.add_argument("--use-relativeCameraPoseLoss", action="store_true")
 	parser.add_argument("--useRelu-relativeCameraPoseLoss", action="store_true")
-	parser.add_argument("--relativeCameraPoseLoss-poseEncoder-dropout", type=float, default=0.)
+	parser.add_argument("--relativeCameraPoseLoss-poseEncoder-dropout", type=float, default=0.1)
 	parser.add_argument("--maskOut-invalidRelativeCameraPoseLoss-inTraining", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-rotationOnly", action="store_true")
 	parser.add_argument("--relativeCameraPoseLoss-rotationInAngles", action="store_true")
@@ -122,7 +122,7 @@ def main():
 	parser.add_argument("--relativeCameraPoseLoss-lossType", type=str, default="l2",
 						help="options from ['l1' | 'l2']")
 
-	parser.add_argument("--weight-decay", type=float, default=1e-3, help="Weight decay")
+	parser.add_argument("--weight-decay", type=float, default=1e-5, help="Weight decay")
 	parser.add_argument("--lr", type=float, default=1e-4, help="Learning rate")
 	parser.add_argument("--lr-videoEncoder", type=float, default=1e-5, help="Learning rate")
 

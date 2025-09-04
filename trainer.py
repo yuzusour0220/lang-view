@@ -120,7 +120,16 @@ def train_n_val(train_loader,
 	relativeCameraPoseLoss_rotationClassSize = kwargs["relativeCameraPoseLoss_rotationClassSize"] if ("relativeCameraPoseLoss_rotationClassSize" in kwargs) else 10
 	maskOut_invalidRelativeCameraPoseLoss_inTraining = kwargs["maskOut_invalidRelativeCameraPoseLoss_inTraining"] if ("maskOut_invalidRelativeCameraPoseLoss_inTraining" in kwargs) else False
 	relativeCameraPoseLoss_lossType = kwargs["relativeCameraPoseLoss_lossType"] if ("relativeCameraPoseLoss_lossType" in kwargs) else 'l2'	
-	relativeCameraPoseLoss_lossWeight = kwargs["relativeCameraPoseLoss_lossWeight"] if ("relativeCameraPoseLoss_lossWeight" in kwargs) else 1.0
+	# Accept both CLI spellings for loss weight (train.py uses 'relativeCameraPoseLoss-weight')
+
+
+	if "relativeCameraPoseLoss_weight" in kwargs:
+		relativeCameraPoseLoss_lossWeight = kwargs["relativeCameraPoseLoss_weight"]
+	elif "relativeCameraPoseLoss_lossWeight" in kwargs:
+		relativeCameraPoseLoss_lossWeight = kwargs["relativeCameraPoseLoss_lossWeight"]
+	else:
+		relativeCameraPoseLoss_lossWeight = 1.0
+  
 	if use_relativeCameraPoseLoss:
 		assert unfreeze_videoEncoder and (recog_arc in ["egovlp_v2"])
 
@@ -288,6 +297,7 @@ def train_n_val(train_loader,
 		val_loader = IterLoader(val_loader, use_distributed=True)
 
 
+	prev_val_loss = None
 	for epoch in range(start_epoch, num_epochs):
 		print(f"Epoch {epoch + 1} out of {num_epochs} epochs")
 		if unfreeze_videoEncoder:
@@ -978,8 +988,13 @@ def train_n_val(train_loader,
 							  best_captioningScores=max_captioningScores,
 							  is_bestCaptioningScores=is_bestCaptioningScores,
 							  )
-
 		print("-" * 80)
+
+		# Early stopping: stop once validation loss starts increasing
+		if prev_val_loss is not None and (val_loss > prev_val_loss):
+			print("Validation loss increased. Early stopping.")
+			break
+		prev_val_loss = val_loss
 
 
 def test(test_loader,
