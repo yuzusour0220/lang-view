@@ -298,29 +298,14 @@ def train_n_val(train_loader,
 
 
 	prev_val_loss = None
-	# LR scheduler setup (per-iteration)
+	# LR scheduler setup using PyTorch schedulers (per-iteration)
+
 	use_lr_scheduler = kwargs.get("use_lr_scheduler", False)
 	lr_warmup_iters = int(kwargs.get("lr_warmup_iters", 5000))
 	lr_warmup_start = float(kwargs.get("lr_warmup_start", 1e-6))
 	lr_min = float(kwargs.get("lr_min", 1e-5))
 	lr_sched_total_iters_arg = int(kwargs.get("lr_scheduler_total_iters", 0))
 
-	# Capture base LR per param group
-	base_lrs = [pg.get("lr", kwargs["lr"]) for pg in optimizer.param_groups]
-
-	def compute_lr(step, base_lr, total_iters):
-		if step < lr_warmup_iters:
-			# Linear warmup from lr_warmup_start to base_lr
-			pct = 0.0 if lr_warmup_iters == 0 else float(step) / float(max(lr_warmup_iters, 1))
-			return lr_warmup_start + (base_lr - lr_warmup_start) * pct
-		# Cosine annealing to lr_min after warmup
-		remain = max(total_iters - lr_warmup_iters, 1)
-		prog = min(max((step - lr_warmup_iters) / remain, 0.0), 1.0)
-		import math
-		cos_term = 0.5 * (1.0 + math.cos(math.pi * prog))
-		return lr_min + (base_lr - lr_min) * cos_term
-
-	# Estimate iters per epoch and total iters if not provided
 	if kwargs["distributed"]:
 		iters_per_epoch_est = kwargs["num_trainIterations"]
 	else:
@@ -334,6 +319,33 @@ def train_n_val(train_loader,
 
 	# Initialize global step considering resume
 	global_step = start_epoch * iters_per_epoch_est
+
+	scheduler = None
+	if use_lr_scheduler:
+		# Warmup using LambdaLR with per-param-group start factors
+		base_lrs = [pg.get("lr", kwargs["lr"]) for pg in optimizer.param_groups]
+		start_factors = [max(lr_warmup_start / max(bl, 1e-12), 0.0) for bl in base_lrs]
+
+		def make_warmup_lambda(s):
+			def f(step):
+				if lr_warmup_iters <= 0:
+					return 1.0
+				t = min(max(step / float(lr_warmup_iters), 0.0), 1.0)
+				return s + (1.0 - s) * t
+			return f
+
+		warmup_lambdas = [make_warmup_lambda(s) for s in start_factors]
+		warmup = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warmup_lambdas, last_epoch=global_step)
+
+		cosine_iters = max(total_iters_est - lr_warmup_iters, 1)
+		cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
+			optimizer, T_max=cosine_iters, eta_min=lr_min, last_epoch=max(global_step - lr_warmup_iters, -1)
+		)
+
+		# Switch from warmup to cosine after lr_warmup_iters steps
+		scheduler = torch.optim.lr_scheduler.SequentialLR(
+			optimizer, schedulers=[warmup, cosine], milestones=[lr_warmup_iters], last_epoch=global_step
+		)
 
 	prev_val_loss = None
 	for epoch in range(start_epoch, num_epochs):
@@ -583,15 +595,15 @@ def train_n_val(train_loader,
 			optimizer.step()
 
 			# Scheduler step per iteration
-			if use_lr_scheduler:
-				for pg_idx, pg in enumerate(optimizer.param_groups):
-					pg["lr"] = compute_lr(global_step, base_lrs[pg_idx], total_iters_est)
+			if use_lr_scheduler and scheduler is not None:
+				scheduler.step()
 				global_step += 1
 
 			if task_type in ["classify_oneHot", "match_dist",]: 
 				if task_type in ["match_dist",]:
 					label = torch.argmax(label, dim=1).long()
 				train_acc_thisBatch = int(torch.sum(torch.argmax(out, dim=1).long() == label))
+
 
 			if task_type in ["classify_oneHot", "match_dist", "classify_oneHot_bestExoPred"]:
 				out_oneHot = torch.zeros((out.shape[0], out.shape[1])).to(out.device)
