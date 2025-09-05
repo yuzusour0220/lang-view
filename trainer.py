@@ -128,7 +128,7 @@ def train_n_val(train_loader,
 	elif "relativeCameraPoseLoss_lossWeight" in kwargs:
 		relativeCameraPoseLoss_lossWeight = kwargs["relativeCameraPoseLoss_lossWeight"]
 	else:
-		relativeCameraPoseLoss_lossWeight = 1.0
+		relativeCameraPoseLoss_lossWeight = 0.5
   
 	if use_relativeCameraPoseLoss:
 		assert unfreeze_videoEncoder and (recog_arc in ["egovlp_v2"])
@@ -296,56 +296,6 @@ def train_n_val(train_loader,
 		train_loader = IterLoader(train_loader, use_distributed=True)
 		val_loader = IterLoader(val_loader, use_distributed=True)
 
-
-	prev_val_loss = None
-	# LR scheduler setup using PyTorch schedulers (per-iteration)
-
-	use_lr_scheduler = kwargs.get("use_lr_scheduler", False)
-	lr_warmup_iters = int(kwargs.get("lr_warmup_iters", 5000))
-	lr_warmup_start = float(kwargs.get("lr_warmup_start", 1e-6))
-	lr_min = float(kwargs.get("lr_min", 1e-5))
-	lr_sched_total_iters_arg = int(kwargs.get("lr_scheduler_total_iters", 0))
-
-	if kwargs["distributed"]:
-		iters_per_epoch_est = kwargs["num_trainIterations"]
-	else:
-		# When not distributed, train_loader is a DataLoader
-		iters_per_epoch_est = len(train_loader)
-		total_train_samples = kwargs.get("num_trainSamples", 0)
-		if total_train_samples and kwargs.get("batch_size", 0):
-			iters_per_epoch_est = max(total_train_samples // kwargs["batch_size"], 1)
-
-	total_iters_est = lr_sched_total_iters_arg if lr_sched_total_iters_arg > 0 else max(num_epochs * iters_per_epoch_est, 1)
-
-	# Initialize global step considering resume
-	global_step = start_epoch * iters_per_epoch_est
-
-	scheduler = None
-	if use_lr_scheduler:
-		# Warmup using LambdaLR with per-param-group start factors
-		base_lrs = [pg.get("lr", kwargs["lr"]) for pg in optimizer.param_groups]
-		start_factors = [max(lr_warmup_start / max(bl, 1e-12), 0.0) for bl in base_lrs]
-
-		def make_warmup_lambda(s):
-			def f(step):
-				if lr_warmup_iters <= 0:
-					return 1.0
-				t = min(max(step / float(lr_warmup_iters), 0.0), 1.0)
-				return s + (1.0 - s) * t
-			return f
-
-		warmup_lambdas = [make_warmup_lambda(s) for s in start_factors]
-		warmup = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warmup_lambdas, last_epoch=global_step)
-
-		cosine_iters = max(total_iters_est - lr_warmup_iters, 1)
-		cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
-			optimizer, T_max=cosine_iters, eta_min=lr_min, last_epoch=max(global_step - lr_warmup_iters, -1)
-		)
-
-		# Switch from warmup to cosine after lr_warmup_iters steps
-		scheduler = torch.optim.lr_scheduler.SequentialLR(
-			optimizer, schedulers=[warmup, cosine], milestones=[lr_warmup_iters], last_epoch=global_step
-		)
 
 	prev_val_loss = None
 	for epoch in range(start_epoch, num_epochs):
@@ -585,7 +535,7 @@ def train_n_val(train_loader,
 
 				loss_relCameraPose = loss_relCameraPose.reshape((loss_relCameraPose.shape[0], -1)) * has_relCameraPose.unsqueeze(1)
 				loss_relCameraPose = torch.sum(loss_relCameraPose) / (max(torch.sum(has_relCameraPose).item(), 1) * loss_relCameraPose.shape[1])
-
+				print(relativeCameraPoseLoss_lossWeight)
 				total_loss = loss + relativeCameraPoseLoss_lossWeight * loss_relCameraPose
 			else:
 				total_loss = loss
@@ -594,16 +544,10 @@ def train_n_val(train_loader,
 			total_loss.backward()	
 			optimizer.step()
 
-			# Scheduler step per iteration
-			if use_lr_scheduler and scheduler is not None:
-				scheduler.step()
-				global_step += 1
-
 			if task_type in ["classify_oneHot", "match_dist",]: 
 				if task_type in ["match_dist",]:
 					label = torch.argmax(label, dim=1).long()
 				train_acc_thisBatch = int(torch.sum(torch.argmax(out, dim=1).long() == label))
-
 
 			if task_type in ["classify_oneHot", "match_dist", "classify_oneHot_bestExoPred"]:
 				out_oneHot = torch.zeros((out.shape[0], out.shape[1])).to(out.device)

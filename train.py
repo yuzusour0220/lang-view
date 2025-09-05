@@ -33,13 +33,14 @@ def main():
 	parser.add_argument("--num-valSamples", type=int, default=960, help="Number of val samples per epoch")
 
 	parser.add_argument("--optimizer-type", type=str, default="adam_w", help="from ['adam' | 'adam_w'] (default: 'adam_w')")
+	parser.add_argument("--no-resume", action="store_true", help="Start training fresh even if last checkpoint exists")
 
-	# LR scheduler: linear warmup then cosine anneal
-	parser.add_argument("--use-lr-scheduler", action="store_true", help="Enable LR scheduler (warmup + cosine)")
-	parser.add_argument("--lr-warmup-iters", type=int, default=5000, help="Warmup iterations")
-	parser.add_argument("--lr-warmup-start", type=float, default=1e-6, help="Starting LR during warmup")
-	parser.add_argument("--lr-min", type=float, default=1e-5, help="Minimum LR for cosine annealing")
-	parser.add_argument("--lr-scheduler-total-iters", type=int, default=0, help="Total train iterations (0=auto)")
+	# # LR scheduler: linear warmup then cosine anneal
+	# parser.add_argument("--use-lr-scheduler", action="store_true", help="Enable LR scheduler (warmup + cosine)")
+	# parser.add_argument("--lr-warmup-iters", type=int, default=5000, help="Warmup iterations")
+	# parser.add_argument("--lr-warmup-start", type=float, default=1e-6, help="Starting LR during warmup")
+	# parser.add_argument("--lr-min", type=float, default=1e-5, help="Minimum LR for cosine annealing")
+	# parser.add_argument("--lr-scheduler-total-iters", type=int, default=0, help="Total train iterations (0=auto)")
 
 	parser.add_argument("--trainDatapoints-filePath", type=list_of_strs__or__str,
 						default="data/ego_exo4d/labels/train/videoLlama_cider_all3Agree.pkl",

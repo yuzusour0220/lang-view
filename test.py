@@ -42,7 +42,7 @@ def main():
 	parser.add_argument("--dont-square-frames", action="store_true")
 
 	parser.add_argument('--unfreeze-videoEncoder', action="store_true")
-	parser.add_argument("--videoEncoder-dropout", type=float, default=0.)
+	parser.add_argument("--videoEncoder-dropout", type=float, default=0.1)
 
 	parser.add_argument('--recog-arc', type=str, default="egovlp_v2", help="Recognition architecture from ['egovlp_v2',]")
 	parser.add_argument("--vidEncoder-ckptPath", type=str, 
@@ -69,7 +69,7 @@ def main():
 	parser.add_argument("--transformerPol-dropout", type=float, default=0.)
 	parser.add_argument("--addPE-transformerPol", action="store_true")
 	parser.add_argument("--linearLayer-dims", type=list_of_ints, default="1024,128")	# default=[1024, 128]
-	parser.add_argument("--linearLayer-dropout", type=float, default=0.)
+	parser.add_argument("--linearLayer-dropout", type=float, default=0.1)
 
 	parser.add_argument("--use-relativeCameraPoseLoss", action="store_true")
 	parser.add_argument("--useRelu-relativeCameraPoseLoss", action="store_true")
