@@ -176,7 +176,7 @@ def main():
 												 batch_size=args.batch_size,
 												 shuffle=False,
 												 num_workers=args.num_workers,	
-												 drop_last=True,
+												 drop_last=False,
 												 )	
 
 	if (not os.path.isdir(args.run_dir)) and is_main_process(args):

@@ -297,7 +297,10 @@ def train_n_val(train_loader,
 		val_loader = IterLoader(val_loader, use_distributed=True)
 
 
-	prev_val_loss = None
+	# Early stopping on total validation loss with patience
+	early_stop_patience = kwargs["early_stop_patience"] if ("early_stop_patience" in kwargs) else 5
+	best_val_total_loss = float('inf')
+	epochs_no_improve = 0
 	for epoch in range(start_epoch, num_epochs):
 		print(f"Epoch {epoch + 1} out of {num_epochs} epochs")
 		if unfreeze_videoEncoder:
@@ -627,23 +630,33 @@ def train_n_val(train_loader,
 			train_acc /= max(train_numSamples, 1)
 			if task_type in ["classify_oneHot", "match_dist"]:
 				train_acc_multiHot /= max(train_numSamples, 1)
-			for captioner_idx in range(len(train_captioningScores)):
-				train_captioningScores[captioner_idx] = train_captioningScores[captioner_idx] / max(train_numSamples, 1)
+				for captioner_idx in range(len(train_captioningScores)):
+					train_captioningScores[captioner_idx] = train_captioningScores[captioner_idx] / max(train_numSamples, 1)
 
-		if task_type in ["classify_oneHot", "match_dist"]:
+			# Compute total training loss (classification + weighted pose loss)
 			if use_relativeCameraPoseLoss:
-				print(f"Train: loss -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
-						f"accuracy -- {train_acc:.4f}, accuracy multi-hot -- {train_acc_multiHot:.4f}, "+\
-						f"captioning scores -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}, ")
+				train_total_loss = train_loss + (relativeCameraPoseLoss_lossWeight * train_loss_relCameraPose)
 			else:
-				print(f"Train: loss -- {train_loss:.4f}, accuracy -- {train_acc:.4f}, "+\
-						f"accuracy multi-hot -- {train_acc_multiHot:.4f}, captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
-		else:
-			if use_relativeCameraPoseLoss:
-				print(f"Train: loss -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
-					  f"accuracy -- {train_acc:.4f}, captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
+				train_total_loss = train_loss
+
+			if task_type in ["classify_oneHot", "match_dist"]:
+				if use_relativeCameraPoseLoss:
+					print(f"Train: loss_cls -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
+					      f"loss_total -- {train_total_loss:.4f}, accuracy -- {train_acc:.4f}, "+\
+					      f"accuracy multi-hot -- {train_acc_multiHot:.4f}, captioning scores -- " +
+					      f"{[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}, ")
+				else:
+					print(f"Train: loss_cls -- {train_loss:.4f}, loss_total -- {train_total_loss:.4f}, "+\
+					      f"accuracy -- {train_acc:.4f}, accuracy multi-hot -- {train_acc_multiHot:.4f}, "+\
+					      f"captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
 			else:
-				print(f"Train: loss -- {train_loss:.4f}, accuracy -- {train_acc:.4f}, captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
+				if use_relativeCameraPoseLoss:
+					print(f"Train: loss_cls -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
+					      f"loss_total -- {train_total_loss:.4f}, accuracy -- {train_acc:.4f}, captioning score -- " +
+					      f"{[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
+				else:
+					print(f"Train: loss_cls -- {train_loss:.4f}, loss_total -- {train_total_loss:.4f}, "+\
+					      f"accuracy -- {train_acc:.4f}, captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
 
 		if unfreeze_videoEncoder:
 			vid_encoder.eval()
@@ -922,20 +935,26 @@ def train_n_val(train_loader,
 			for captioner_idx in range(len(val_captioningScores)):
 				val_captioningScores[captioner_idx] = val_captioningScores[captioner_idx] / max(val_numSamples, 1)	
 
+		# Compute total validation loss
+		if use_relativeCameraPoseLoss:
+			val_total_loss = val_loss + (relativeCameraPoseLoss_lossWeight * val_loss_relCameraPose)
+		else:
+			val_total_loss = val_loss
+
 		if task_type in ["classify_oneHot", "match_dist",]:
 			if use_relativeCameraPoseLoss:	# use_relativeCameraPoseLoss / False
-				print(f"Val: loss -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
-						f"accuracy -- {val_acc:.4f}, accuracy multi-hot -- {val_acc_multiHot:.4f}, "+
+				print(f"Val: loss_cls -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
+						f"loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, accuracy multi-hot -- {val_acc_multiHot:.4f}, "+
 						f"captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
 			else:
-				print(f"Val: loss -- {val_loss:.4f}, accuracy -- {val_acc:.4f} "+\
+				print(f"Val: loss_cls -- {val_loss:.4f}, loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f} "+\
 						f"accuracy multi-hot -- {val_acc_multiHot:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
 		else:
 			if use_relativeCameraPoseLoss:	# use_relativeCameraPoseLoss / False
-				print(f"Val: loss -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f},"+\
-						f" accuracy -- {val_acc:.4f}m captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}") 
+				print(f"Val: loss_cls -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
+						f"loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}") 
 			else:
-				print(f"Val: loss -- {val_loss:.4f}, accuracy -- {val_acc:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
+				print(f"Val: loss_cls -- {val_loss:.4f}, loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
 
 		is_best = False
 		is_bestCaptioningScores = [False] * (len(kwargs["valDatapoints_filePath"]) if isinstance(kwargs["valDatapoints_filePath"], list) else 1)
@@ -955,13 +974,17 @@ def train_n_val(train_loader,
 					is_bestCaptioningScores[captioner_idx] = True
 					max_captioningScores[captioner_idx] = val_captioningScore
 
-			if val_loss < min_loss:
-				is_bestLoss = True
-				min_loss = val_loss
+				if val_total_loss < min_loss:
+					is_bestLoss = True
+					min_loss = val_total_loss
 
-			if writer is not None:
-				writer.add_scalar(f'Loss/train', train_loss, epoch)
-				writer.add_scalar(f'Loss/val', val_loss, epoch)
+				if writer is not None:
+					# Primary indicators: total losses
+					writer.add_scalar(f'Loss_total/train', train_total_loss, epoch)
+					writer.add_scalar(f'Loss_total/val', val_total_loss, epoch)
+					# Components for clarity
+					writer.add_scalar(f'Loss/train', train_loss, epoch)
+					writer.add_scalar(f'Loss/val', val_loss, epoch)
 				if use_relativeCameraPoseLoss:
 					writer.add_scalar('loss_relCameraPose/train', train_loss_relCameraPose, epoch)
 					writer.add_scalar('loss_relCameraPose/val', val_loss_relCameraPose, epoch)
@@ -990,11 +1013,15 @@ def train_n_val(train_loader,
 							  )
 		print("-" * 80)
 
-		# Early stopping: stop once validation loss starts increasing
-		if prev_val_loss is not None and (val_loss > prev_val_loss):
-			print("Validation loss increased. Early stopping.")
-			break
-		prev_val_loss = val_loss
+		# Early stopping on total validation loss with patience
+		if val_total_loss < best_val_total_loss:
+			best_val_total_loss = val_total_loss
+			epochs_no_improve = 0
+		else:
+			epochs_no_improve += 1
+			if epochs_no_improve >= early_stop_patience:
+				print(f"No improvement in total val loss for {early_stop_patience} epochs. Early stopping.")
+				break
 
 
 def test(test_loader,
