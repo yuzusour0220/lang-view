@@ -10,3 +10,4 @@ slurm
 data_part_*
 data.tar
 *.sif
+runsold

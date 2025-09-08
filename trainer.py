@@ -7,6 +7,7 @@ from datasets.utils import *
 import os
 import numpy as np
 from tqdm import tqdm
+import sys
 
 import cv2 as cv
 
@@ -302,7 +303,8 @@ def train_n_val(train_loader,
 	best_val_total_loss = float('inf')
 	epochs_no_improve = 0
 	for epoch in range(start_epoch, num_epochs):
-		print(f"Epoch {epoch + 1} out of {num_epochs} epochs")
+		if is_main_process(args):
+			print(f"Epoch {epoch + 1} out of {num_epochs} epochs")
 		if unfreeze_videoEncoder:
 			vid_encoder.train()
 		model.train()
@@ -325,7 +327,16 @@ def train_n_val(train_loader,
 			for captioner_idx in range(len(train_captioningScores)):
 				metric_logger.add_meter(f"captioning_score_{captioner_idx + 1}", SmoothedValue(window_size=1, fmt="{value:.4f}", args=args))
 
-		for ele_idx, loader_ele in enumerate(tqdm(train_loader)):
+		for ele_idx, loader_ele in enumerate(
+												tqdm(
+			train_loader,
+			disable=(kwargs["distributed"] and (not is_main_process(args))),
+			mininterval=5,
+			miniters=10,
+			dynamic_ncols=True,
+			leave=False,
+			file=sys.stdout,
+		)):
 			if kwargs["distributed"]:
 				if ele_idx >= num_trainIters:
 					break
@@ -538,7 +549,7 @@ def train_n_val(train_loader,
 
 				loss_relCameraPose = loss_relCameraPose.reshape((loss_relCameraPose.shape[0], -1)) * has_relCameraPose.unsqueeze(1)
 				loss_relCameraPose = torch.sum(loss_relCameraPose) / (max(torch.sum(has_relCameraPose).item(), 1) * loss_relCameraPose.shape[1])
-				print(relativeCameraPoseLoss_lossWeight)
+				# Debug print removed to avoid noisy per-iteration output
 				total_loss = loss + relativeCameraPoseLoss_lossWeight * loss_relCameraPose
 			else:
 				total_loss = loss
@@ -548,6 +559,10 @@ def train_n_val(train_loader,
 			optimizer.step()
 
 			if task_type in ["classify_oneHot", "match_dist",]: 
+				# Ensure label shape is (B,) before accuracy to avoid broadcasting
+				# Especially important when using multi-hot losses where label can be (B,1)
+				if (task_type in ["classify_oneHot"]) and (len(label.shape) == 2):
+					label = label.squeeze(-1)
 				if task_type in ["match_dist",]:
 					label = torch.argmax(label, dim=1).long()
 				train_acc_thisBatch = int(torch.sum(torch.argmax(out, dim=1).long() == label))
@@ -611,18 +626,18 @@ def train_n_val(train_loader,
 				if use_relativeCameraPoseLoss:
 					train_numSamples_relCameraPose += torch.sum(has_relCameraPose).item()
 
-		if kwargs["distributed"]:
-			metric_logger.synchronize_between_processes()
-			train_loss = metric_logger.meters["loss"].global_avg
-			if use_relativeCameraPoseLoss:
-				train_loss_relCameraPose = metric_logger.meters["loss_relCameraPose"].global_avg
-			train_acc = metric_logger.meters["accuracy"].global_avg
-			if task_type in ["classify_oneHot", "match_dist"]:
-				train_acc_multiHot = metric_logger.meters["accuracy_multiHot"].global_avg
-			train_captioningScores_tmp = []
-			for captioner_idx in range(len(train_captioningScores)):
-				train_captioningScores_tmp.append(metric_logger.meters[f"captioning_score_{captioner_idx + 1}"].global_avg)
-			train_captioningScores = train_captioningScores_tmp
+			if kwargs["distributed"]:
+				metric_logger.synchronize_between_processes()
+				train_loss = metric_logger.meters["loss"].global_avg
+				if use_relativeCameraPoseLoss:
+					train_loss_relCameraPose = metric_logger.meters["loss_relCameraPose"].global_avg
+				train_acc = metric_logger.meters["accuracy"].global_avg
+				if task_type in ["classify_oneHot", "match_dist"]:
+					train_acc_multiHot = metric_logger.meters["accuracy_multiHot"].global_avg
+				train_captioningScores_tmp = []
+				for captioner_idx in range(len(train_captioningScores)):
+					train_captioningScores_tmp.append(metric_logger.meters[f"captioning_score_{captioner_idx + 1}"].global_avg)
+				train_captioningScores = train_captioningScores_tmp
 		else:
 			train_loss /= max(train_numSamples, 1)
 			if use_relativeCameraPoseLoss:
@@ -641,21 +656,25 @@ def train_n_val(train_loader,
 
 			if task_type in ["classify_oneHot", "match_dist"]:
 				if use_relativeCameraPoseLoss:
-					print(f"Train: loss_cls -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
+					if is_main_process(args):
+						print(f"Train: loss_cls -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
 					      f"loss_total -- {train_total_loss:.4f}, accuracy -- {train_acc:.4f}, "+\
 					      f"accuracy multi-hot -- {train_acc_multiHot:.4f}, captioning scores -- " +
 					      f"{[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}, ")
 				else:
-					print(f"Train: loss_cls -- {train_loss:.4f}, loss_total -- {train_total_loss:.4f}, "+\
+					if is_main_process(args):
+						print(f"Train: loss_cls -- {train_loss:.4f}, loss_total -- {train_total_loss:.4f}, "+\
 					      f"accuracy -- {train_acc:.4f}, accuracy multi-hot -- {train_acc_multiHot:.4f}, "+\
 					      f"captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
 			else:
 				if use_relativeCameraPoseLoss:
-					print(f"Train: loss_cls -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
+					if is_main_process(args):
+						print(f"Train: loss_cls -- {train_loss:.4f}, loss_relCameraPose -- {train_loss_relCameraPose:.4f}, "+\
 					      f"loss_total -- {train_total_loss:.4f}, accuracy -- {train_acc:.4f}, captioning score -- " +
 					      f"{[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
 				else:
-					print(f"Train: loss_cls -- {train_loss:.4f}, loss_total -- {train_total_loss:.4f}, "+\
+					if is_main_process(args):
+						print(f"Train: loss_cls -- {train_loss:.4f}, loss_total -- {train_total_loss:.4f}, "+\
 					      f"accuracy -- {train_acc:.4f}, captioning score -- {[round(train_captioningScore, 4) for train_captioningScore in train_captioningScores]}")
 
 		if unfreeze_videoEncoder:
@@ -679,7 +698,16 @@ def train_n_val(train_loader,
 				metric_logger.add_meter("accuracy_multiHot", SmoothedValue(window_size=1, fmt="{value:.4f}", args=args))
 			for captioner_idx in range(len(val_captioningScores)):
 				metric_logger.add_meter(f"captioning_score_{captioner_idx + 1}", SmoothedValue(window_size=1, fmt="{value:.4f}", args=args))
-		for ele_idx, loader_ele in enumerate(tqdm(val_loader)):
+		for ele_idx, loader_ele in enumerate(
+												tqdm(
+			val_loader,
+			disable=(kwargs["distributed"] and (not is_main_process(args))),
+			mininterval=5,
+			miniters=10,
+			dynamic_ncols=True,
+			leave=False,
+			file=sys.stdout,
+		)):
 			if kwargs["distributed"]:
 				if ele_idx >= num_valIters:
 					break
@@ -854,6 +882,10 @@ def train_n_val(train_loader,
 				loss_relCameraPose = torch.sum(loss_relCameraPose) / (max(torch.sum(has_relCameraPose).item(), 1) * loss_relCameraPose.shape[1])
 
 			if task_type in ["classify_oneHot", "match_dist",]:
+				# Ensure label shape is (B,) before accuracy to avoid broadcasting
+				# Especially important when using multi-hot losses where label can be (B,1)
+				if (task_type in ["classify_oneHot"]) and (len(label.shape) == 2):
+					label = label.squeeze(-1)
 				if task_type in ["match_dist",]:
 					label = torch.argmax(label, dim=1).long()
 				val_acc_thisBatch = int(torch.sum(torch.argmax(out, dim=1).long() == label))
@@ -943,18 +975,22 @@ def train_n_val(train_loader,
 
 		if task_type in ["classify_oneHot", "match_dist",]:
 			if use_relativeCameraPoseLoss:	# use_relativeCameraPoseLoss / False
-				print(f"Val: loss_cls -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
+				if is_main_process(args):
+					print(f"Val: loss_cls -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
 						f"loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, accuracy multi-hot -- {val_acc_multiHot:.4f}, "+
 						f"captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
 			else:
-				print(f"Val: loss_cls -- {val_loss:.4f}, loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f} "+\
+				if is_main_process(args):
+					print(f"Val: loss_cls -- {val_loss:.4f}, loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f} "+\
 						f"accuracy multi-hot -- {val_acc_multiHot:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
 		else:
 			if use_relativeCameraPoseLoss:	# use_relativeCameraPoseLoss / False
-				print(f"Val: loss_cls -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
+				if is_main_process(args):
+					print(f"Val: loss_cls -- {val_loss:.4f}, loss_relCameraPose -- {val_loss_relCameraPose:.4f}, "+\
 						f"loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}") 
 			else:
-				print(f"Val: loss_cls -- {val_loss:.4f}, loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
+				if is_main_process(args):
+					print(f"Val: loss_cls -- {val_loss:.4f}, loss_total -- {val_total_loss:.4f}, accuracy -- {val_acc:.4f}, captioning score -- {[round(val_captioningScore, 4) for val_captioningScore in val_captioningScores]}")
 
 		is_best = False
 		is_bestCaptioningScores = [False] * (len(kwargs["valDatapoints_filePath"]) if isinstance(kwargs["valDatapoints_filePath"], list) else 1)
@@ -1019,9 +1055,9 @@ def train_n_val(train_loader,
 			epochs_no_improve = 0
 		else:
 			epochs_no_improve += 1
-			if epochs_no_improve >= early_stop_patience:
-				print(f"No improvement in total val loss for {early_stop_patience} epochs. Early stopping.")
-				break
+			# if epochs_no_improve >= early_stop_patience:
+			# 	print(f"No improvement in total val loss for {early_stop_patience} epochs. Early stopping.")
+			# 	break
 
 
 def test(test_loader,
@@ -1103,7 +1139,8 @@ def test(test_loader,
 	test_numSamples = 0
 	dump_dict = {}
 	dumpVids_wAttentionMask_startSampleIdxThisBatch = 0
-	for ele_idx, loader_ele in enumerate(tqdm(test_loader)):
+	for ele_idx, loader_ele in enumerate(
+															tqdm(test_loader, dynamic_ncols=True, leave=False, file=sys.stdout)):
 		if task_type == "classify_oneHot_bestExoPred":
 			frames, label, indices, label_multiHot = loader_ele
 		else:
